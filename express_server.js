@@ -31,6 +31,18 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${random}`);         // Respond with 'Ok' (we will replace this)
 });
 
+//POST REQUEST (DELETE)
+app.post("/urls/:shrotURL/delete", (req, res) => {
+  const shortURL = String(req.params.shrotURL);
+  console.log("body", shortURL);
+
+  delete urlDatabase[shortURL];
+  res.redirect('/urls');         // Respond with 'Ok' (we will replace this)
+
+  // urlDatabase[random] = req.body.longURL;
+  // res.redirect(`/urls/${random}`);         // Respond with 'Ok' (we will replace this)
+});
+
 //SECOND route
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
