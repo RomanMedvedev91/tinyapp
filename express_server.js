@@ -4,6 +4,8 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
+
 
 app.set('view engine', 'ejs');
 const urlDatabase = {
@@ -15,15 +17,22 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-//FIRST route
+// GET LIST OF URLS
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { 
+    urls: urlDatabase,
+    username: req.cookies["username"]};
+  console.log(req.cookies);
   res.render("urls_index", templateVars);
 });
 
 // urls_index
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    username: req.cookies["username"],
+    // ... any other vars
+  };
+  res.render("urls_new", templateVars);
 });
 //POST REQUEST
 app.post("/urls", (req, res) => {
@@ -32,14 +41,21 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${random}`);
 });
 
-// POST LOGIN ROUTE
+// POST LOGIN 
 app.post("/login", (req, res) => {
   const username = String(req.body.username);
-  // urlDatabase[shortURL] = newLongURL;
-  res.cookie
-  console.log(username);
+  res.cookie("username", username);
+  // const templateVars = {
+  //   username: req.cookies["username"],
+  //   // ... any other vars
+  // };
+  // res.render("urls_index", templateVars);
   res.redirect('/urls');
+});
 
+// POST LOGOUT 
+app.post("/logout", (res, req) => {
+  
 })
 
 //POST REQUEST (DELETE)
@@ -58,16 +74,20 @@ app.post("/urls/:shortURL", (req, res) => {
 
 })
 
-//SECOND route
+// GET URL
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  const templateVars = {
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+    username: req.cookies["username"]
+  };
   res.render("urls_show", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
-  console.log(longURL);
-  console.log(urlDatabase);
+  // console.log(longURL);
+  // console.log(urlDatabase);
   res.redirect(`${longURL}`);
  });
 
