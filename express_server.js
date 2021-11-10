@@ -28,20 +28,25 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls", (req, res) => {
   const random = generateRandomString();
   urlDatabase[random] = req.body.longURL;
-  res.redirect(`/urls/${random}`);         // Respond with 'Ok' (we will replace this)
+  res.redirect(`/urls/${random}`);
 });
 
 //POST REQUEST (DELETE)
 app.post("/urls/:shrotURL/delete", (req, res) => {
   const shortURL = String(req.params.shrotURL);
-  console.log("body", shortURL);
-
   delete urlDatabase[shortURL];
-  res.redirect('/urls');         // Respond with 'Ok' (we will replace this)
-
-  // urlDatabase[random] = req.body.longURL;
-  // res.redirect(`/urls/${random}`);         // Respond with 'Ok' (we will replace this)
+  res.redirect('/urls');
 });
+
+// POST EDIT ROUTE
+app.post("/urls/:shortURL", (req, res) => {
+  const newLongURL = req.body.shortURL;
+  const shortURL = req.params.shortURL;
+  urlDatabase[shortURL] = newLongURL;
+  console.log("urlDatabase", urlDatabase);
+  res.redirect('/urls');
+
+})
 
 //SECOND route
 app.get("/urls/:shortURL", (req, res) => {
