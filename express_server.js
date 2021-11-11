@@ -1,16 +1,9 @@
 const express = require("express");
 const cookieParser = require('cookie-parser')
 const bodyParser = require("body-parser");
+const userHelper = require("./helper/userHelper");
 
-const app = express();
-const PORT = 8080; // default port 8080
-
-app.use(express.static("public")); 
-app.use(cookieParser());
-app.use(bodyParser.urlencoded({extended: true}));
-app.set('view engine', 'ejs');
-
-
+//DATA BASE
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -26,8 +19,27 @@ const users = {
     id: "user2RandomID", 
     email: "user2@example.com", 
     password: "dishwasher-funk"
+  },
+ "user3RandomID": {
+    id: "user23RandomID", 
+    email: "user3@example.com", 
+    password: "dishwasher-funk"
   }
 }
+
+const { getUserInformation, userAuthurization, userRegister } = 
+  userHelper(users);
+
+const app = express();
+const PORT = 8080; 
+
+app.use(express.static("public")); 
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({extended: true}));
+app.set('view engine', 'ejs');
+
+
+//=====ROUTES========
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -59,8 +71,17 @@ app.post("/urls", (req, res) => {
 
 // POST LOGIN 
 app.post("/login", (req, res) => {
-  const username = String(req.body.username);
-  res.cookie("username", username);
+  const { email, password } = req.body;
+  const currentUser = getUserInformation(email);
+  console.log(currentUser);
+  const { status, error } = userAuthurization(currentUser ,email, password);
+  if(error) {
+    res.status(status);
+    return res.send(error);
+  }
+  
+  res.cookie("user_id", currentUser.id);
+  // res.cookie("isAuthenticated", true);
   res.redirect('/urls');
 });
 
@@ -86,14 +107,19 @@ app.post("/urls/:shortURL", (req, res) => {
   res.redirect('/urls');
 });
 
-const { userAuthurization } = require("./helper/userHelper");
-
 // POST REGISTER
 app.post("/register", (req, res) => {
   const random = generateRandomString();
+  console.log("random", random);
   const { email, password } = req.body;
+  console.log("email", email);
+  console.log("pass", password);
 
-  const { status, error } = userAuthurization(users, email, password);
+  const currentUser = getUserInformation(email);
+  console.log("user", currentUser);
+
+  const { status, error } = userRegister(currentUser, email, password); //check on error
+  
 
   // if (email === '' || password === '') {
     if(error) {
