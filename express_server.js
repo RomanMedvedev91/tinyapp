@@ -57,13 +57,24 @@ app.get("/urls", (req, res) => {
 
 // urls_index
 app.get("/urls/new", (req, res) => {
+  
   const templateVars = { 
-    user: (users[req.cookies["user_id"]])
+    user: users[req.cookies["user_id"]]
   };
+  if (!templateVars.user) {
+    res.redirect("/login");
+  }
   res.render("urls_new", templateVars);
 });
+
 //POST REQUEST
 app.post("/urls", (req, res) => {
+  if (!req.cookies["user_id"]) {
+    console.log("Not authorized user tried to send POST req to /urls")
+    return res.send("Access denied: not authorized user");
+
+    // return res.redirect('/login');
+  }
   const random = generateRandomString();
   urlDatabase[random] = req.body.longURL;
   res.redirect(`/urls/${random}`);
@@ -73,7 +84,7 @@ app.post("/urls", (req, res) => {
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
   const currentUser = getUserInformation(email);
-  console.log(currentUser);
+  // console.log(currentUser);
   const { status, error } = userAuthurization(currentUser ,email, password);
   if(error) {
     res.status(status);
@@ -88,6 +99,8 @@ app.post("/login", (req, res) => {
 // POST LOGOUT 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
+  // res.clearCookie("isAuthenticated");
+
   res.redirect('/urls');
 });
 
@@ -109,13 +122,13 @@ app.post("/urls/:shortURL", (req, res) => {
 // POST REGISTER
 app.post("/register", (req, res) => {
   const random = generateRandomString();
-  console.log("random", random);
+  // console.log("random", random);
   const { email, password } = req.body;
-  console.log("email", email);
-  console.log("pass", password);
+  // console.log("email", email);
+  // console.log("pass", password);
 
   const currentUser = getUserInformation(email);
-  console.log("user", currentUser);
+  // console.log("user", currentUser);
 
   const { status, error } = userRegister(currentUser, email, password); //check on error
   
@@ -141,6 +154,7 @@ app.post("/register", (req, res) => {
   };
   
   res.cookie("user_id", random);
+  // res.clearCookie("isAuthenticated", true);
   res.redirect('/urls');
 });
 
