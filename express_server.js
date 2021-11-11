@@ -87,7 +87,6 @@ app.post("/login", (req, res) => {
 
 // POST LOGOUT 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
   res.clearCookie("user_id");
   res.redirect('/urls');
 });
@@ -152,7 +151,7 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies["username"]
+    user_id: req.cookies["user_id"]
   };
   res.render("urls_show", templateVars);
 });
