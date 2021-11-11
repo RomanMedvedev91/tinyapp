@@ -119,6 +119,8 @@ app.post("/register", (req, res) => {
   res.redirect('/urls');
 });
 
+
+
 // GET URL
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
@@ -146,6 +148,11 @@ app.get("/hello", (req, res) => {
 app.get("/register", (req, res) => {
   res.render("registration");
 });
+
+// GET LOGIN
+app.get("/login", (req, res) => {
+  res.render("login");
+})
 
 
 function generateRandomString() {
