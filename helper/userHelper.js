@@ -1,46 +1,60 @@
 const userHelper = (users) => {
-  
-	const getUserInformation = (email) => {
+  const getUserInformation = (email) => {
     for (let user in users) {
       if (users[user].email === email) {
         return users[user];
       }
     }
     return null;
-	};
+  };
 
-const userAuthurization = function(currentUser, email, password) {
-  if (email === '' || password === '') {
-    return { status: 400, error: "email or password is incorrect" };
-  }
-
-  if (!currentUser) {
-    return { status: 403, error: "user cannot be found" }
-  }
-
-  if (currentUser.password !== password) {
-    return { status: 403, error: "email or password is incorrect" }
-  }
-  return { status: 200, error: null }
-}
-
-const userRegister = function(currentUser, email, password) {
-  if (email === '' || password === '') {
-    return { status: 400, error: "email or password is incorrect" };
-  }
-    if (currentUser) {
-      return { status: 400, error: "email is already used" }
+  const userAuthurization = function (currentUser, email, password) {
+    if (email === "" || password === "") {
+      return {
+        status: 400,
+        error: "email or password is incorrect <a href='/login'>try again</a>",
+      };
     }
-    return { status: 200, error: null }
-  }
 
-  return { 
+    if (!currentUser) {
+      return {
+        status: 403,
+        error: "user cannot be found <a href='/login'>try again</a>",
+      };
+    }
+
+    if (currentUser.password !== password) {
+      return {
+        status: 403,
+        error: "email or password is incorrect <a href='/login'>try again</a>",
+      };
+    }
+    return { status: 200, error: null };
+  };
+
+  const userRegister = function (currentUser, email, password) {
+    if (email === "" || password === "") {
+      return {
+        status: 400,
+        error:
+          "email or password is incorrect <a href='/register'>try again</a>",
+      };
+    }
+    if (currentUser) {
+      return {
+        status: 400,
+        error: "email is already used <a href='/register'>try again</a>",
+      };
+    }
+    return { status: 200, error: null };
+  };
+
+  return {
     getUserInformation,
     userAuthurization,
-    userRegister 
-  }
-}
-
+    userRegister,
+  };
+};
 
 // const userRegistration = function(users, email, password) {
 //     if (email === '' || password === '') {
@@ -51,7 +65,7 @@ const userRegister = function(currentUser, email, password) {
 
 //       return { status: 400, error: "email is already used" }
 //     }
-//  } 
+//  }
 // }
 
 // const userLogin = function(users, email, password) {
@@ -64,11 +78,9 @@ const userRegister = function(currentUser, email, password) {
 //     }
 //     if (users[user[email]]) {
 //       return { status: 403, error: "user cannot be found" }
-  
-//     } 
-//   } 
-  
 
+//     }
+//   }
 
 //  return { status: 200, error: null }
 // }
