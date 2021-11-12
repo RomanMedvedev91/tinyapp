@@ -1,13 +1,10 @@
 const express = require("express");
-const cookieParser = require("cookie-parser");
+var cookieSession = require("cookie-session");
+
 const bodyParser = require("body-parser");
 const userHelper = require("./helper/userHelper");
 const bcrypt = require("bcryptjs");
-//DATA BASE
-// const urlDatabase = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com"
-// };
+
 const urlDatabase = {
   b2xVn2: {
     longURL: "http://www.lighthouselabs.ca",
@@ -44,7 +41,13 @@ const app = express();
 const PORT = 8080;
 
 app.use(express.static("public"));
-app.use(cookieParser());
+app.use(
+  cookieSession({
+    name: "session",
+    keys: ["email"],
+  })
+);
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 
@@ -56,10 +59,11 @@ app.get("/", (req, res) => {
 
 // GET LIST OF URLS
 app.get("/urls", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
+  console.log(userId);
+  console.log(req.session.user_id);
   const templateVars = {
-    // urls: urlDatabase,
-    urls: urlsForUser(req.cookies["user_id"]),
+    urls: urlsForUser(req.session.user_id),
     user: users[userId],
   };
   res.render("urls_index", templateVars);
@@ -68,7 +72,7 @@ app.get("/urls", (req, res) => {
 // urls_index
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
   };
   if (!templateVars.user) {
     return res.redirect("/login");
@@ -78,14 +82,14 @@ app.get("/urls/new", (req, res) => {
 
 //POST REQUEST
 app.post("/urls", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.user_id) {
     console.log("Not authorized user tried to send POST req to /urls");
     return res.send("Access denied: not authorized user");
   }
   const random = generateRandomString();
   urlDatabase[random] = {};
   urlDatabase[random].longURL = req.body.longURL;
-  urlDatabase[random].userID = req.cookies["user_id"];
+  urlDatabase[random].userID = req.session.user_id;
   res.redirect(`/urls/${random}`);
 });
 
@@ -101,21 +105,13 @@ app.post("/login", (req, res) => {
     return res.send(error);
   }
 
-  // users[currentUser.id] = {
-  //   id: currentUser.id,
-  //   email,
-  //   password,
-  // };
-
-  // console.log(users);
-
-  res.cookie("user_id", currentUser.id);
+  req.session.user_id = currentUser.id;
   res.redirect("/urls");
 });
 
 // POST LOGOUT
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session.user_id = null;
 
   res.redirect("/urls");
 });
@@ -124,7 +120,7 @@ app.post("/logout", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   // check user auth
-  const currentUserUrls = urlsForUser(req.cookies["user_id"]);
+  const currentUserUrls = urlsForUser(req.session.user_id);
 
   if (!currentUserUrls[shortURL]) {
     return res.send("Access denied, Please <a href='/login'>Log In</a>");
@@ -138,7 +134,7 @@ app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const newLongURL = req.body.longURL;
 
-  const currentUserUrls = urlsForUser(req.cookies["user_id"]);
+  const currentUserUrls = urlsForUser(req.session.user_id);
   if (!currentUserUrls[shortURL]) {
     return res.send("Access denied, Please <a href='/login'>Log In</a>");
   }
@@ -156,27 +152,17 @@ app.post("/register", (req, res) => {
 
   const { status, error } = userRegister(currentUser, email, password); //check on error
 
-  // if (email === '' || password === '') {
   if (error) {
     res.status(status);
     return res.send(error);
   }
-  // return
-  // }
-  // for (const user in users) {
-  //   if (users[user].email === email) {
-  //   res.status(400);
-  //   return res.send("email is already used");
-  //   }
-  // }
 
   users[random] = {
     id: random,
     email,
     password: hashedPassword,
-    // password,
   };
-  res.cookie("user_id", random);
+  req.session.user_id = random;
   res.redirect("/urls");
 });
 
@@ -185,7 +171,7 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL: String(req.params.shortURL),
     longURL: urlDatabase[req.params.shortURL].longURL,
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
   };
   res.render("urls_show", templateVars);
 });

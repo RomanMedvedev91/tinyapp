@@ -24,7 +24,6 @@ const userHelper = (users) => {
         error: "user cannot be found <a href='/login'>try again</a>",
       };
     }
-    // if (currentUser.password !== password) {
     if (!bcrypt.compareSync(password, currentUser.password)) {
       return {
         status: 403,
@@ -57,34 +56,5 @@ const userHelper = (users) => {
     userRegister,
   };
 };
-
-// const userRegistration = function(users, email, password) {
-//     if (email === '' || password === '') {
-//     return { status: 400, error: "email or password is incorrect" };
-//   }
-//   for (const user in users) {
-//     if (users[user].email === email) {
-
-//       return { status: 400, error: "email is already used" }
-//     }
-//  }
-// }
-
-// const userLogin = function(users, email, password) {
-//     if (email === '' || password === '') {
-//     return { status: 400, error: "email or password is incorrect" };
-//   }
-//   for (const user in users) {
-//     if (users[user].email === email && users[user].password !== password) {
-//       return { status: 403, error: "email or password is incorrect" }
-//     }
-//     if (users[user[email]]) {
-//       return { status: 403, error: "user cannot be found" }
-
-//     }
-//   }
-
-//  return { status: 200, error: null }
-// }
 
 module.exports = userHelper;
