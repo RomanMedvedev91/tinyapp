@@ -14,6 +14,7 @@
 <body>
   <div class="card text-center">
     <div class="card-header"></div>
+    <% if (user) {%>
     <div class="card-body">
       <h5 class="card-title">TinyURL for: <%= longURL %></h5>
       <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
@@ -29,6 +30,11 @@
         </div>
       </form>
     </div>
+    <%} else {%>
+    <div class="card-body">
+      <p class="card-text">You need Log In to see the content: <a href="/login">Log In</a></p>
+    </div>
+    <% } %>
   </div>
 
 
