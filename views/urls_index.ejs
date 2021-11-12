@@ -26,6 +26,7 @@
         </tr>
       </thead>
       <tbody>
+        <% if (user) {%>
         <% for(let url in urls) { %>
         <tr>
           <td><%= url %></td>
@@ -40,6 +41,11 @@
               <button type="submit" class="btn btn-outline-danger">delete</button>
             </form>
           </td>
+        </tr>
+        <% } %>
+        <% } else { %>
+        <tr>
+          <td>You need login to see the content <a href='/login'>Log IN</a>"</td>
         </tr>
         <% } %>
       </tbody>

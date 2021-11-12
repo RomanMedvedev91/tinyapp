@@ -60,6 +60,11 @@ app.get("/urls", (req, res) => {
     urls: urlDatabase,
     user: users[req.cookies["user_id"]],
   };
+  // if (!templateVars.user) {
+  //   return res.send(
+  //     "You need login to see the content <a href='/login'>try again</a>"
+  //   );
+  // }
   console.log("app.get=>", urlDatabase);
   res.render("urls_index", templateVars);
 });
@@ -70,7 +75,7 @@ app.get("/urls/new", (req, res) => {
     user: users[req.cookies["user_id"]],
   };
   if (!templateVars.user) {
-    res.redirect("/login");
+    return res.redirect("/login");
   }
   res.render("urls_new", templateVars);
 });
