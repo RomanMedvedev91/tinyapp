@@ -20,17 +20,17 @@ const urlDatabase = {
 };
 
 const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+  aJ481W: {
+    id: "aJ481W",
+    email: "roma@gmail.com",
+    password: "1",
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
     password: "dishwasher-funk",
   },
-  user3RandomID: {
+  user23RandomID: {
     id: "user23RandomID",
     email: "user3@example.com",
     password: "dishwasher-funk",
@@ -56,16 +56,15 @@ app.get("/", (req, res) => {
 
 // GET LIST OF URLS
 app.get("/urls", (req, res) => {
+  const userId = req.cookies["user_id"];
+  console.log(userId);
   const templateVars = {
-    urls: urlDatabase,
-    user: users[req.cookies["user_id"]],
+    // urls: urlDatabase,
+    urls: urlsForUser(req.cookies["user_id"]),
+    user: users[userId],
   };
-  // if (!templateVars.user) {
-  //   return res.send(
-  //     "You need login to see the content <a href='/login'>try again</a>"
-  //   );
-  // }
-  console.log("app.get=>", urlDatabase);
+  console.log(templateVars);
+
   res.render("urls_index", templateVars);
 });
 
@@ -102,6 +101,14 @@ app.post("/login", (req, res) => {
     res.status(status);
     return res.send(error);
   }
+
+  // users[currentUser.id] = {
+  //   id: currentUser.id,
+  //   email,
+  //   password,
+  // };
+
+  console.log(users);
 
   res.cookie("user_id", currentUser.id);
   res.redirect("/urls");
@@ -185,7 +192,9 @@ app.get("/urls/:shortURL", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   if (!urlDatabase[shortURL]) {
-    return res.send("Page is not defined");
+    return res.send(
+      "Page is not defined, <a href='/urls'>try again</a> with http://..."
+    );
   }
   const longURL = urlDatabase[shortURL].longURL;
   res.redirect(`${longURL}`);
@@ -216,6 +225,16 @@ function generateRandomString() {
     arr.push(String.fromCharCode(97 + randomNum));
   }
   return arr.join("");
+}
+
+function urlsForUser(id) {
+  newDatabase = {};
+  for (let key in urlDatabase) {
+    if (urlDatabase[key].userID === id) {
+      newDatabase[key] = urlDatabase[key];
+    }
+  }
+  return newDatabase;
 }
 
 app.listen(PORT, () => {
