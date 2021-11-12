@@ -57,13 +57,13 @@ app.get("/", (req, res) => {
 // GET LIST OF URLS
 app.get("/urls", (req, res) => {
   const userId = req.cookies["user_id"];
-  console.log(userId);
+  // console.log(userId);
   const templateVars = {
     // urls: urlDatabase,
     urls: urlsForUser(req.cookies["user_id"]),
     user: users[userId],
   };
-  console.log(templateVars);
+  // console.log(templateVars);
 
   res.render("urls_index", templateVars);
 });
@@ -108,7 +108,7 @@ app.post("/login", (req, res) => {
   //   password,
   // };
 
-  console.log(users);
+  // console.log(users);
 
   res.cookie("user_id", currentUser.id);
   res.redirect("/urls");
@@ -123,8 +123,13 @@ app.post("/logout", (req, res) => {
 
 //POST REQUEST (DELETE)
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const shortURL = String(req.params.shortURL);
-  console.log("delete", shortURL);
+  const shortURL = req.params.shortURL;
+  // check user auth
+  const currentUserUrls = urlsForUser(req.cookies["user_id"]);
+
+  if (!currentUserUrls[shortURL]) {
+    return res.send("Access denied, Please <a href='/login'>Log In</a>");
+  }
   delete urlDatabase[shortURL];
   res.redirect("/urls");
 });
@@ -133,10 +138,12 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const newLongURL = req.body.longURL;
-  console.log("EDIT newLongURL", newLongURL);
-  console.log("EDIT SHort", shortURL);
+
+  const currentUserUrls = urlsForUser(req.cookies["user_id"]);
+  if (!currentUserUrls[shortURL]) {
+    return res.send("Access denied, Please <a href='/login'>Log In</a>");
+  }
   urlDatabase[shortURL].longURL = newLongURL;
-  console.log("EDITED DATABASE", urlDatabase);
   res.redirect("/urls");
   return;
 });
