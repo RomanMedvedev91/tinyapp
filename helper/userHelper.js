@@ -1,3 +1,5 @@
+const bcrypt = require("bcryptjs");
+
 const userHelper = (users) => {
   const getUserInformation = (email) => {
     for (let user in users) {
@@ -22,8 +24,8 @@ const userHelper = (users) => {
         error: "user cannot be found <a href='/login'>try again</a>",
       };
     }
-
-    if (currentUser.password !== password) {
+    // if (currentUser.password !== password) {
+    if (!bcrypt.compareSync(password, currentUser.password)) {
       return {
         status: 403,
         error: "email or password is incorrect <a href='/login'>try again</a>",

@@ -2,7 +2,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const userHelper = require("./helper/userHelper");
-
+const bcrypt = require("bcryptjs");
 //DATA BASE
 // const urlDatabase = {
 //   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -57,14 +57,11 @@ app.get("/", (req, res) => {
 // GET LIST OF URLS
 app.get("/urls", (req, res) => {
   const userId = req.cookies["user_id"];
-  // console.log(userId);
   const templateVars = {
     // urls: urlDatabase,
     urls: urlsForUser(req.cookies["user_id"]),
     user: users[userId],
   };
-  // console.log(templateVars);
-
   res.render("urls_index", templateVars);
 });
 
@@ -96,6 +93,8 @@ app.post("/urls", (req, res) => {
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
   const currentUser = getUserInformation(email);
+  console.log("current user => ", currentUser);
+
   const { status, error } = userAuthurization(currentUser, email, password);
   if (error) {
     res.status(status);
@@ -151,13 +150,9 @@ app.post("/urls/:shortURL", (req, res) => {
 // POST REGISTER
 app.post("/register", (req, res) => {
   const random = generateRandomString();
-  // console.log("random", random);
   const { email, password } = req.body;
-  // console.log("email", email);
-  // console.log("pass", password);
-
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const currentUser = getUserInformation(email);
-  // console.log("user", currentUser);
 
   const { status, error } = userRegister(currentUser, email, password); //check on error
 
@@ -178,11 +173,10 @@ app.post("/register", (req, res) => {
   users[random] = {
     id: random,
     email,
-    password,
+    password: hashedPassword,
+    // password,
   };
-
   res.cookie("user_id", random);
-  // res.clearCookie("isAuthenticated", true);
   res.redirect("/urls");
 });
 
