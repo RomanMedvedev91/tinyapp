@@ -51,10 +51,18 @@ app.use(
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 
-//=====ROUTES========
+//=====GET ROUTES========
 
+// MINOR PAGE
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  // res.send("Hello!");
+  const templateVars = {
+    user: users[req.session.user_id],
+  };
+  if (!templateVars.user) {
+    return res.redirect("/login");
+  }
+  res.redirect("/urls");
 });
 
 // GET LIST OF URLS
@@ -78,92 +86,6 @@ app.get("/urls/new", (req, res) => {
     return res.redirect("/login");
   }
   res.render("urls_new", templateVars);
-});
-
-//POST REQUEST
-app.post("/urls", (req, res) => {
-  if (!req.session.user_id) {
-    console.log("Not authorized user tried to send POST req to /urls");
-    return res.send("Access denied: not authorized user");
-  }
-  const random = generateRandomString();
-  urlDatabase[random] = {};
-  urlDatabase[random].longURL = req.body.longURL;
-  urlDatabase[random].userID = req.session.user_id;
-  res.redirect(`/urls/${random}`);
-});
-
-// POST LOGIN
-app.post("/login", (req, res) => {
-  const { email, password } = req.body;
-  const currentUser = getUserInformation(email);
-  console.log("current user => ", currentUser);
-
-  const { status, error } = userAuthurization(currentUser, email, password);
-  if (error) {
-    res.status(status);
-    return res.send(error);
-  }
-
-  req.session.user_id = currentUser.id;
-  res.redirect("/urls");
-});
-
-// POST LOGOUT
-app.post("/logout", (req, res) => {
-  req.session.user_id = null;
-
-  res.redirect("/urls");
-});
-
-//POST REQUEST (DELETE)
-app.post("/urls/:shortURL/delete", (req, res) => {
-  const shortURL = req.params.shortURL;
-  // check user auth
-  const currentUserUrls = urlsForUser(req.session.user_id);
-
-  if (!currentUserUrls[shortURL]) {
-    return res.send("Access denied, Please <a href='/login'>Log In</a>");
-  }
-  delete urlDatabase[shortURL];
-  res.redirect("/urls");
-});
-
-// POST EDIT ROUTE
-app.post("/urls/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  const newLongURL = req.body.longURL;
-
-  const currentUserUrls = urlsForUser(req.session.user_id);
-  if (!currentUserUrls[shortURL]) {
-    return res.send("Access denied, Please <a href='/login'>Log In</a>");
-  }
-  urlDatabase[shortURL].longURL = newLongURL;
-  res.redirect("/urls");
-  return;
-});
-
-// POST REGISTER
-app.post("/register", (req, res) => {
-  const random = generateRandomString();
-  const { email, password } = req.body;
-  const hashedPassword = bcrypt.hashSync(password, 10);
-  const currentUser = getUserInformation(email);
-
-  const { status, error } = userRegister(currentUser, email, password); //check on error
-
-  if (error) {
-    res.status(status);
-    return res.send(error);
-  }
-
-  users[random] = {
-    id: random,
-    email,
-    password: hashedPassword,
-  };
-  req.session.user_id = random;
-  res.redirect("/urls");
 });
 
 // GET URL
@@ -197,14 +119,113 @@ app.get("/hello", (req, res) => {
 
 // GET REGISTRATION
 app.get("/register", (req, res) => {
-  res.render("registration");
+  const id = req.session.user_id;
+  const user = users[id];
+  if (user) {
+    return res.redirect('/urls');
+  }
+  res.render("registration", { user });
 });
 
 // GET LOGIN
 app.get("/login", (req, res) => {
-  res.render("login");
+  const id = req.session.user_id;
+  const user = users[id];
+  if (user) {
+    return res.redirect('/urls');
+  }
+  res.render("login", { user });
 });
 
+//===POST REQUESTS===
+
+//list of urls
+app.post("/urls", (req, res) => {
+  if (!req.session.user_id) {
+    console.log("Not authorized user tried to send POST req to /urls");
+    return res.send("Access denied: not authorized user");
+  }
+  const random = generateRandomString();
+  urlDatabase[random] = {};
+  urlDatabase[random].longURL = req.body.longURL;
+  urlDatabase[random].userID = req.session.user_id;
+  res.redirect(`/urls/${random}`);
+});
+
+// LOGIN
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+  const currentUser = getUserInformation(email);
+  // console.log("current user => ", currentUser);
+
+  const { status, error } = userAuthurization(currentUser, email, password);
+  if (error) {
+    return res.status(status).send(error);
+  }
+
+  req.session.user_id = currentUser.id;
+  res.redirect("/urls");
+});
+
+// LOGOUT
+app.post("/logout", (req, res) => {
+  req.session.user_id = null;
+
+  res.redirect("/urls");
+});
+
+// DELETE url
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const shortURL = req.params.shortURL;
+  // check user auth
+  const currentUserUrls = urlsForUser(req.session.user_id);
+
+  if (!currentUserUrls[shortURL]) {
+    return res.send("Access denied, Please <a href='/login'>Log In</a>");
+  }
+  delete urlDatabase[shortURL];
+  res.redirect("/urls");
+});
+
+// EDIT urls
+app.post("/urls/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  const newLongURL = req.body.longURL;
+
+  const currentUserUrls = urlsForUser(req.session.user_id);
+  if (!currentUserUrls[shortURL]) {
+    return res.send("Access denied, Please <a href='/login'>Log In</a>");
+  }
+  urlDatabase[shortURL].longURL = newLongURL;
+  res.redirect("/urls");
+  return;
+});
+
+// REGISTER new user
+app.post("/register", (req, res) => {
+  const random = generateRandomString();
+  const { email, password } = req.body;
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  const currentUser = getUserInformation(email);
+
+  const { status, error } = userRegister(currentUser, email, password); //check on error
+
+  if (error) {
+    res.status(status);
+    return res.send(error);
+  }
+
+  users[random] = {
+    id: random,
+    email,
+    password: hashedPassword,
+  };
+  req.session.user_id = random;
+  res.redirect("/urls");
+});
+
+
+//helper function
 function generateRandomString() {
   let arr = [];
   for (let i = 0; i < 6; i++) {
@@ -214,6 +235,7 @@ function generateRandomString() {
   return arr.join("");
 }
 
+//checker appropriate url for user
 function urlsForUser(id) {
   newDatabase = {};
   for (let key in urlDatabase) {
