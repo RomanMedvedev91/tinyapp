@@ -55,7 +55,6 @@ app.set("view engine", "ejs");
 
 // MINOR PAGE
 app.get("/", (req, res) => {
-  // res.send("Hello!");
   const templateVars = {
     user: users[req.session.user_id],
   };
@@ -68,8 +67,6 @@ app.get("/", (req, res) => {
 // GET LIST OF URLS
 app.get("/urls", (req, res) => {
   const userId = req.session.user_id;
-  console.log(userId);
-  console.log(req.session.user_id);
   const templateVars = {
     urls: urlsForUser(req.session.user_id),
     user: users[userId],
@@ -88,18 +85,10 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-// GET URL
-app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = {
-    shortURL: String(req.params.shortURL),
-    longURL: urlDatabase[req.params.shortURL].longURL,
-    user: users[req.session.user_id],
-  };
-  res.render("urls_show", templateVars);
-});
-
+// short url
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
+  console.log("from /u/:", shortURL);
   if (!urlDatabase[shortURL]) {
     return res.send(
       "Page is not defined, <a href='/urls'>try again</a> with http://..."
@@ -108,6 +97,28 @@ app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[shortURL].longURL;
   res.redirect(`${longURL}`);
 });
+
+// GET URL
+app.get("/urls/:shortURL", (req, res) => {
+  const userId = req.session.user_id;
+  const shortURL = req.params.shortURL;
+// check authorized user
+  if (!users[userId]) {
+    return res.redirect("/login");
+  }
+  if (!urlDatabase[shortURL]) {
+    return res.send(
+      "Page is not defined, <a href='/urls'>try again</a> with http://..."
+    );
+  }
+  const templateVars = {
+    shortURL,
+    longURL: urlDatabase[shortURL].longURL,
+    user: users[userId],
+  };
+  res.render("urls_show", templateVars);
+});
+
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
