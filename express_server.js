@@ -1,5 +1,5 @@
 const express = require("express");
-var cookieSession = require("cookie-session");
+const cookieSession = require("cookie-session");
 
 const bodyParser = require("body-parser");
 const userHelper = require("./helper/userHelper");
@@ -148,7 +148,7 @@ app.get("/login", (req, res) => {
   res.render("login", { user });
 });
 
-//===POST REQUESTS===
+//===POST ROUTS===
 
 //list of urls
 app.post("/urls", (req, res) => {
@@ -167,9 +167,8 @@ app.post("/urls", (req, res) => {
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
   const currentUser = getUserInformation(email);
-  // console.log("current user => ", currentUser);
-
   const { status, error } = userAuthurization(currentUser, email, password);
+
   if (error) {
     return res.status(status).send(error);
   }
@@ -181,7 +180,6 @@ app.post("/login", (req, res) => {
 // LOGOUT
 app.post("/logout", (req, res) => {
   req.session.user_id = null;
-
   res.redirect("/urls");
 });
 
@@ -202,8 +200,8 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const newLongURL = req.body.longURL;
-
   const currentUserUrls = urlsForUser(req.session.user_id);
+
   if (!currentUserUrls[shortURL]) {
     return res.send("Access denied, Please <a href='/login'>Log In</a>");
   }
@@ -218,7 +216,6 @@ app.post("/register", (req, res) => {
   const { email, password } = req.body;
   const hashedPassword = bcrypt.hashSync(password, 10);
   const currentUser = getUserInformation(email);
-
   const { status, error } = userRegister(currentUser, email, password); //check on error
 
   if (error) {
@@ -231,6 +228,7 @@ app.post("/register", (req, res) => {
     email,
     password: hashedPassword,
   };
+
   req.session.user_id = random;
   res.redirect("/urls");
 });
