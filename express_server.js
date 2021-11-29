@@ -76,11 +76,18 @@ app.get("/urls/:shortURL", (req, res) => {
   if (!users[userId]) {
     return res.redirect("/login");
   }
+
   if (!urlDatabase[shortURL]) {
     return res.send(
       "Page is not defined, <a href='/urls'>try again</a> with http://..."
     );
   }
+// check if currecnt user can user other users' shortURL
+ if (urlDatabase[shortURL].userID !== userId) {
+  return res.send(
+    "Page is not defined, <a href='/urls'>try again</a>"
+  );
+ }
   const templateVars = {
     shortURL,
     longURL: urlDatabase[shortURL].longURL,
@@ -172,6 +179,7 @@ app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const newLongURL = req.body.longURL;
   const currentUserUrls = urlsForUser(req.session.user_id);
+
 
   if (!currentUserUrls[shortURL]) {
     return res.send("Access denied, Please <a href='/login'>Log In</a>");
