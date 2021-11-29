@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const userHelper = require("./helper/userHelper");
 const bcrypt = require("bcryptjs");
 const { urlDatabase, users } = require('./helper/dataBases');
-const { getUserInformation, userAuthurization, userRegister } =
+const { getUserInformation, userAuthurization } =
   userHelper(users);
 const { generateRandomString, urlsForUser } = require("./helper/helperFunctions");
 const app = express();
@@ -123,9 +123,10 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
+  const url = req.url;
   const { email, password } = req.body;
   const currentUser = getUserInformation(email);
-  const { status, error } = userAuthurization(currentUser, email, password);
+  const { status, error } = userAuthurization(currentUser, email, password, url);
 
   if (error) {
     return res.status(status).send(error);
@@ -167,11 +168,12 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+  const url = req.url;
   const random = generateRandomString();
   const { email, password } = req.body;
   const hashedPassword = bcrypt.hashSync(password, 10);
   const currentUser = getUserInformation(email);
-  const { status, error } = userRegister(currentUser, email, password); //check on error
+  const { status, error } = userAuthurization(currentUser, email, password, url);
 
   if (error) {
     res.status(status);
@@ -187,9 +189,6 @@ app.post("/register", (req, res) => {
   req.session.user_id = random;
   res.redirect("/urls");
 });
-
-
-
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);

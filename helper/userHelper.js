@@ -10,42 +10,34 @@ const userHelper = (users) => {
     return null;
   };
 
-  const userAuthurization = function (currentUser, email, password) {
+  const userAuthurization = function (currentUser, email, password, url) {
     if (email === "" || password === "") {
       return {
         status: 400,
         error: "email or password is incorrect <a href='/login'>try again</a>",
       };
     }
-
-    if (!currentUser) {
-      return {
-        status: 403,
-        error: "user cannot be found <a href='/login'>try again</a>",
-      };
+    if (url === "/login") {
+      if (!currentUser) {
+        return {
+          status: 403,
+          error: "user cannot be found <a href='/login'>try again</a>",
+        };
+      }
+      if (!bcrypt.compareSync(password, currentUser.password)) {
+        return {
+          status: 403,
+          error: "email or password is incorrect <a href='/login'>try again</a>",
+        };
+      }
     }
-    if (!bcrypt.compareSync(password, currentUser.password)) {
-      return {
-        status: 403,
-        error: "email or password is incorrect <a href='/login'>try again</a>",
-      };
-    }
-    return { status: 200, error: null };
-  };
-
-  const userRegister = function (currentUser, email, password) {
-    if (email === "" || password === "") {
-      return {
-        status: 400,
-        error:
-          "email or password is incorrect <a href='/register'>try again</a>",
-      };
-    }
-    if (currentUser) {
-      return {
-        status: 400,
-        error: "email is already used <a href='/register'>try again</a>",
-      };
+    if (url === "/register") {
+      if (currentUser) {
+            return {
+              status: 400,
+              error: "email is already used <a href='/register'>try again</a>",
+            };
+          }
     }
     return { status: 200, error: null };
   };
@@ -53,7 +45,6 @@ const userHelper = (users) => {
   return {
     getUserInformation,
     userAuthurization,
-    userRegister,
   };
 };
 
