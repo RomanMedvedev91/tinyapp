@@ -149,7 +149,8 @@ app.post("/login", (req, res) => {
 
 // LOGOUT
 app.post("/logout", (req, res) => {
-  req.session.user_id = null;
+  console.log('I am logout');
+  req.session = null;
   res.redirect("/urls");
 });
 
