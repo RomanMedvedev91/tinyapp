@@ -6,7 +6,7 @@ const bcrypt = require("bcryptjs");
 const { urlDatabase, users } = require('./helper/dataBases');
 const { getUserInformation, userAuthurization, userRegister } =
   userHelper(users);
-
+const { generateRandomString, urlsForUser } = require("./helper/helperFunctions");
 const app = express();
 const PORT = 8080;
 
@@ -21,9 +21,8 @@ app.use(
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 
-//=====GET ROUTES========
+//list of GET routs
 
-// MINOR PAGE
 app.get("/", (req, res) => {
   const templateVars = {
     user: users[req.session.user_id],
@@ -34,17 +33,15 @@ app.get("/", (req, res) => {
   res.redirect("/urls");
 });
 
-// GET LIST OF URLS
 app.get("/urls", (req, res) => {
   const userId = req.session.user_id;
   const templateVars = {
-    urls: urlsForUser(req.session.user_id),
+    urls: urlsForUser(req.session.user_id, urlDatabase),
     user: users[userId],
   };
   res.render("urls_index", templateVars);
 });
 
-// urls_index
 app.get("/urls/new", (req, res) => {
   const templateVars = {
     user: users[req.session.user_id],
@@ -55,10 +52,8 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-// short url
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  console.log("from /u/:", shortURL);
   if (!urlDatabase[shortURL]) {
     return res.send(
       "Page is not defined, <a href='/urls'>try again</a> with http://..."
@@ -68,7 +63,6 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(`${longURL}`);
 });
 
-// GET URL
 app.get("/urls/:shortURL", (req, res) => {
   const userId = req.session.user_id;
   const shortURL = req.params.shortURL;
@@ -96,16 +90,6 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-// GET REGISTRATION
 app.get("/register", (req, res) => {
   const id = req.session.user_id;
   const user = users[id];
@@ -115,7 +99,6 @@ app.get("/register", (req, res) => {
   res.render("registration", { user });
 });
 
-// GET LOGIN
 app.get("/login", (req, res) => {
   const id = req.session.user_id;
   const user = users[id];
@@ -125,9 +108,8 @@ app.get("/login", (req, res) => {
   res.render("login", { user });
 });
 
-//===POST ROUTS===
+//list of POST routs
 
-//list of urls
 app.post("/urls", (req, res) => {
   if (!req.session.user_id) {
     console.log("Not authorized user tried to send POST req to /urls");
@@ -140,7 +122,6 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${random}`);
 });
 
-// LOGIN
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
   const currentUser = getUserInformation(email);
@@ -154,18 +135,15 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
-// LOGOUT
 app.post("/logout", (req, res) => {
-  console.log('I am logout');
   req.session = null;
   res.redirect("/urls");
 });
 
-// DELETE url
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   // check user auth
-  const currentUserUrls = urlsForUser(req.session.user_id);
+  const currentUserUrls = urlsForUser(req.session.user_id, urlDatabase);
 
   if (!currentUserUrls[shortURL]) {
     return res.send("Access denied, Please <a href='/login'>Log In</a>");
@@ -174,11 +152,10 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-// EDIT urls
 app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const newLongURL = req.body.longURL;
-  const currentUserUrls = urlsForUser(req.session.user_id);
+  const currentUserUrls = urlsForUser(req.session.user_id, urlDatabase);
 
 
   if (!currentUserUrls[shortURL]) {
@@ -189,7 +166,6 @@ app.post("/urls/:shortURL", (req, res) => {
   return;
 });
 
-// REGISTER new user
 app.post("/register", (req, res) => {
   const random = generateRandomString();
   const { email, password } = req.body;
@@ -213,26 +189,7 @@ app.post("/register", (req, res) => {
 });
 
 
-//helper function
-function generateRandomString() {
-  let arr = [];
-  for (let i = 0; i < 6; i++) {
-    let randomNum = Math.floor(Math.random() * 25 + 1);
-    arr.push(String.fromCharCode(97 + randomNum));
-  }
-  return arr.join("");
-}
 
-//checker appropriate url for user
-function urlsForUser(id) {
-  newDatabase = {};
-  for (let key in urlDatabase) {
-    if (urlDatabase[key].userID === id) {
-      newDatabase[key] = urlDatabase[key];
-    }
-  }
-  return newDatabase;
-}
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
